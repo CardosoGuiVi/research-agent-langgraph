@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Research agent</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <header class="top">
+    <h1>Research agent</h1>
+    <p class="lede">Ask a question. The agent plans sub-questions, researches them in parallel, checks coverage, and writes a cited report.</p>
+    <form id="ask" class="ask">
+      <label for="question" class="visually-hidden">Question</label>
+      <textarea id="question" name="question" rows="2" required minlength="3" maxlength="2000"
+        placeholder="Analyze the main observability technologies for AI applications in production."></textarea>
+      <div class="ask-actions">
+        <button type="submit" id="run">Research</button>
+        <button type="button" id="new-thread" class="quiet" hidden>Start a new thread</button>
+        <span id="thread-note" class="muted" aria-live="polite"></span>
+      </div>
+    </form>
+  </header>
+
+  <main class="layout">
+    <section class="trace" aria-labelledby="trace-title">
+      <h2 id="trace-title">What the agent is doing</h2>
+      <ol id="trace" class="graph" aria-live="polite">
+        <li class="empty muted">Progress for each step appears here while the agent works.</li>
+      </ol>
+      <p id="usage" class="usage muted"></p>
+    </section>
+
+    <section class="report" aria-labelledby="report-title">
+      <h2 id="report-title" class="visually-hidden">Report</h2>
+      <p id="error" class="error" role="alert" hidden></p>
+      <article id="report" class="prose">
+        <p class="muted">The report streams in here once research is done.</p>
+      </article>
+    </section>
+  </main>
+  <script src="/static/app.js" type="module"></script>
+</body>
+</html>

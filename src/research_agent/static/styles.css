@@ -1,0 +1,79 @@
+:root {
+  --paper: #eef2f5; --surface: #ffffff; --ink: #16232e; --muted: #5a6b7b;
+  --rule: #cbd5df; --active: #0e6b6b; --retry: #9a6412; --danger: #a33a2a;
+  --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #0f161d; --surface: #17212b; --ink: #dce5ee; --muted: #8a9bab;
+    --rule: #2a3845; --active: #5cc0bd; --retry: #d9a441; --danger: #e8836f;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 16px/1.5 var(--sans); }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.muted { color: var(--muted); }
+:focus-visible { outline: 2px solid var(--active); outline-offset: 2px; }
+
+.top { max-width: 72rem; margin: 0 auto; padding: 2.5rem 1.25rem 1.5rem; }
+h1 { font-size: 2rem; line-height: 1.15; font-weight: 600; margin: 0 0 .25rem; letter-spacing: -0.01em; }
+.lede { margin: 0 0 1.25rem; color: var(--muted); max-width: 60ch; }
+.ask textarea {
+  width: 100%; font: inherit; font-size: 1.125rem; padding: .75rem .9rem; resize: vertical;
+  color: var(--ink); background: var(--surface); border: 1px solid var(--rule); border-radius: 6px;
+}
+.ask-actions { display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; margin-top: .75rem; }
+button {
+  font: inherit; font-weight: 500; padding: .55rem 1.1rem; border-radius: 6px; cursor: pointer;
+  border: 1px solid var(--active); background: var(--active); color: var(--surface);
+}
+button.quiet { background: transparent; color: var(--active); }
+button:disabled { opacity: .55; cursor: progress; }
+
+.layout {
+  max-width: 72rem; margin: 0 auto; padding: 0 1.25rem 4rem;
+  display: grid; grid-template-columns: 22rem minmax(0, 1fr); gap: 2.5rem; align-items: start;
+}
+@media (max-width: 52rem) { .layout { grid-template-columns: 1fr; gap: 1.5rem; } }
+h2 { font-size: 1rem; font-weight: 600; margin: 0 0 .75rem; }
+
+/* The graph trace: a vertical wire with nodes; research fans out into lanes. */
+.graph { list-style: none; margin: 0; padding: 0 0 0 1.1rem; border-left: 2px solid var(--rule); }
+.step { position: relative; margin: 0 0 1rem; }
+.step::before {
+  content: ""; position: absolute; left: calc(-1.1rem - 6px); top: .45rem; width: 10px; height: 10px;
+  border-radius: 50%; background: var(--paper); border: 2px solid var(--rule);
+}
+.step.running::before { border-color: var(--active); background: var(--active); animation: pulse 1.2s ease-in-out infinite; }
+.step.done::before { border-color: var(--active); background: var(--surface); }
+.step-title { font-weight: 500; }
+.step-meta { font-size: .875rem; color: var(--muted); }
+.lanes { list-style: none; margin: .5rem 0 0; padding: 0; display: grid; gap: .5rem; }
+.lane { background: var(--surface); border: 1px solid var(--rule); border-left: 3px solid var(--rule); border-radius: 4px; padding: .5rem .65rem; font-size: .875rem; }
+.lane.running { border-left-color: var(--active); }
+.lane.retry { border-left-color: var(--retry); }
+.lane.failed { border-left-color: var(--danger); }
+.lane-q { font-weight: 500; margin: 0 0 .2rem; }
+.lane-log { margin: 0; padding: 0; list-style: none; color: var(--muted); }
+.lane-log li { overflow-wrap: anywhere; }
+.lane-tag { font-size: .8rem; color: var(--retry); }
+.usage { font-size: .875rem; margin-top: 1rem; }
+@keyframes pulse { 50% { opacity: .35; } }
+@media (prefers-reduced-motion: reduce) { .step.running::before { animation: none; } }
+
+/* Report: long-form reading in a serif. */
+.prose { font-family: var(--serif); font-size: 1.0625rem; line-height: 1.65; max-width: 70ch; }
+.prose h2 { font-family: var(--sans); font-size: 1.25rem; margin: 2rem 0 .5rem; }
+.prose h2:first-child { margin-top: 0; }
+.prose h3 { font-family: var(--sans); font-size: 1.05rem; margin: 1.5rem 0 .4rem; }
+.prose ul, .prose ol { padding-left: 1.3rem; }
+.prose li { margin: .3rem 0; }
+.prose a { color: var(--active); }
+.prose a.cite { text-decoration: none; font-family: var(--sans); font-size: .78em; vertical-align: super; line-height: 0; }
+.prose .sources { font-family: var(--sans); font-size: .9rem; padding-left: 0; list-style: none; }
+.prose .sources li { overflow-wrap: anywhere; }
+.prose .sources li:target { background: color-mix(in srgb, var(--active) 14%, transparent); }
+.prose.streaming { white-space: pre-wrap; }
+.error { color: var(--danger); font-weight: 500; }

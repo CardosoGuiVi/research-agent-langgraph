@@ -4,9 +4,11 @@ from __future__ import annotations
 
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from research_agent import __version__
 from research_agent.api.middleware import REQUEST_ID_HEADER, RequestIdMiddleware
@@ -16,6 +18,7 @@ from research_agent.container import Container, build_container
 from research_agent.logging import configure_logging, get_logger
 
 _log = get_logger(__name__)
+STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
 
 
 def create_app(container: Container | None = None) -> FastAPI:
@@ -38,6 +41,11 @@ def create_app(container: Container | None = None) -> FastAPI:
     app.state.container = container
     app.add_middleware(RequestIdMiddleware)
     app.include_router(router)
+    app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
+    @app.get("/", include_in_schema=False)
+    async def index() -> FileResponse:
+        return FileResponse(STATIC_DIR / "index.html")
 
     @app.exception_handler(Exception)
     async def unhandled(request: Request, exc: Exception) -> JSONResponse:
