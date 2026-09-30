@@ -22,6 +22,7 @@ class RequestIdMiddleware(BaseHTTPMiddleware):
         # Accept only short, safe IDs from clients; otherwise mint our own.
         request_id = incoming if 0 < len(incoming) <= 64 and incoming.isprintable() else ""
         request_id = request_id or uuid.uuid4().hex
+        request.state.request_id = request_id  # for the 500 handler, which runs outside us
         structlog.contextvars.bind_contextvars(request_id=request_id)
         start = time.perf_counter()
         try:

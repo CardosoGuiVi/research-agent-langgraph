@@ -23,8 +23,23 @@ def make_settings(**overrides: Any) -> Settings:
     return Settings(_env_file=None, **base)  # type: ignore[call-arg]
 
 
-def build_test_container(**settings_overrides: Any) -> Container:
-    return build_container(make_settings(**settings_overrides))
+def build_test_container(
+    *,
+    llm: FakeLLM | None = None,
+    search: FakeSearchProvider | None = None,
+    fetcher: FakeFetcher | None = None,
+    **settings_overrides: Any,
+) -> Container:
+    default_results = [
+        SearchResult(title="OTel GenAI", url="https://otel.example/genai", snippet="semconv"),
+        SearchResult(title="Langfuse", url="https://langfuse.example/docs", snippet="tracing"),
+    ]
+    return build_container(
+        make_settings(**settings_overrides),
+        llm=llm or FakeLLM(),
+        search_provider=search or FakeSearchProvider(default=default_results),
+        fetcher=fetcher or FakeFetcher(),
+    )
 
 
 class FakeSearchProvider:

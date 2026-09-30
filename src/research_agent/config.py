@@ -38,7 +38,7 @@ class Settings(BaseSettings):
 
     # --- Graph limits ---
     max_iterations: int = Field(default=2, ge=1, le=5)
-    max_research_steps: int = Field(default=4, ge=1, le=10)
+    max_research_steps: int = Field(default=3, ge=1, le=10)
     max_searches_per_run: int = Field(default=20, ge=1)
     max_fetches_per_run: int = Field(default=20, ge=0)
     min_sub_questions: int = Field(default=3, ge=1)
@@ -49,7 +49,7 @@ class Settings(BaseSettings):
     search_timeout_s: float = Field(default=15.0, gt=0)
     fetch_timeout_s: float = Field(default=15.0, gt=0)
     fetch_max_bytes: int = Field(default=2_000_000, gt=0)
-    fetch_max_chars: int = Field(default=8_000, gt=0)
+    fetch_max_chars: int = Field(default=6_000, gt=0)
     tool_max_attempts: int = Field(default=3, ge=1)
 
     # --- Service ---
