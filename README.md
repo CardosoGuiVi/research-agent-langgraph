@@ -1,3 +1,5 @@
+<div align="center">
+
 # research-agent-langgraph
 
 A research agent that plans a question, researches sub-questions in parallel on the web, checks its own coverage, and returns a structured report with verifiable citations. Built with FastAPI, LangGraph and Claude.
@@ -6,11 +8,17 @@ A research agent that plans a question, researches sub-questions in parallel on 
 ![Python 3.12](https://img.shields.io/badge/python-3.12-blue)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
+</div>
+
 ## Demo
 
-![Demo: a question goes in, the graph runs live (planner, five parallel research lanes, coverage check) and a cited report streams out](docs/demo.gif)
+<p align="center">
+  <img src="docs/demo.gif" alt="Demo: a question goes in, the graph runs live (planner, five parallel research lanes, coverage check) and a cited report streams out" width="680">
+</p>
 
-A real run (sped up): 5 sub-questions researched in parallel, 20 searches, 14 pages read, 41 cited sources, $0.43, 103 s. [Full-size screenshot](docs/screenshot.png).
+<p align="center">
+  A real run (sped up): 5 sub-questions researched in parallel, 20 searches, 14 pages read, 41 cited sources, $0.43, 103 s. <a href="docs/screenshot.png">Full-size screenshot</a>.
+</p>
 
 ```bash
 curl -s -X POST localhost:8000/research \
