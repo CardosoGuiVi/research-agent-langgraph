@@ -52,6 +52,9 @@ analysis -> (research again for gaps | answer) -> END. Iteration cap enforced in
 ## Gotchas
 - Citation rule: a `[n]` group is a citation only if all numbers are within 1..max source id;
   larger numbers (HTTP codes etc.) stay literal (found by the eval, see ADR 4).
+- Report language: `PlannerOutput.language` (ISO code, required) -> `ResearchPlan.language` ->
+  `report.headings_for()`. The parser also accepts English headings. The UI finds the sources
+  list by shape (last `## ` section of `[n] ...` lines), not by its localized title.
 - Studio passes no run context; `GraphDeps.scope()` falls back to a per-thread scope.
 - `structlog` is pinned to 25.x because `langgraph-api` (studio group) requires <26.
 

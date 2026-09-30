@@ -21,6 +21,7 @@ PLAN = PlannerOutput(
         PlannedSubQuestion(question="Eval tools?", search_queries=["llm evals"], rationale=""),
     ],
     strategy="s",
+    language="en",
 )
 ANALYSIS = AnalysisOutput(
     assessments=[

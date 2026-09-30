@@ -23,6 +23,12 @@ in `invalid_citations`; bracketed numbers outside the source range (e.g. `[429, 
 as literal text. That rule came from the eval, which caught HTTP status codes being treated as
 citations.
 
+Headings are localized. The planner reports the question's language (ISO 639-1) in its
+structured output, and the answer prompt receives the exact headings from a table in
+`report.py` (English, Portuguese). The parser matches those plus the English names, so a model
+that ignores the instruction still parses. This keeps parsing exact instead of guessing
+translated headings.
+
 ### Consequences
 
 - Good: readable streaming, one LLM call, deterministic and unit-tested structure extraction.

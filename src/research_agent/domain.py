@@ -21,6 +21,9 @@ class PlannedSubQuestion(BaseModel):
 class PlannerOutput(BaseModel):
     sub_questions: list[PlannedSubQuestion]
     strategy: str = Field(description="One or two sentences on the overall research strategy.")
+    language: str = Field(
+        description="ISO 639-1 code of the language the question is written in, e.g. 'en', 'pt'."
+    )
 
 
 class SubQuestion(BaseModel):
@@ -33,6 +36,7 @@ class SubQuestion(BaseModel):
 class ResearchPlan(BaseModel):
     sub_questions: list[SubQuestion]
     strategy: str
+    language: str = "en"  # ISO 639-1 code of the question; the report is written in it
 
 
 # --- Research --------------------------------------------------------------------------------
@@ -89,6 +93,7 @@ class SourceRef(BaseModel):
 
 class Report(BaseModel):
     question: str
+    language: str = Field(default="en", description="ISO 639-1 code the report is written in.")
     summary: str
     sections: list[ReportSection]
     key_findings: list[str]

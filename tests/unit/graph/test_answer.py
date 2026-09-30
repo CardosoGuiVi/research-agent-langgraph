@@ -114,3 +114,38 @@ async def test_llm_failure_falls_back_to_raw_notes() -> None:
     assert any("tracing [1]" in s.content for s in report.sections)
     assert [s.id for s in report.sources] == [1, 3]
     assert h.scope.metrics.errors
+
+
+PT_ANSWER = """## Resumo
+Tracing importa [1].
+
+## Principais conclusões
+- Tracing [1].
+"""
+
+
+async def test_answer_in_portuguese_uses_localized_headings() -> None:
+    h = make_harness(FakeLLM(answer=PT_ANSWER))
+    state = _state()
+    state["plan"] = PLAN.model_copy(update={"language": "pt"})
+    out = await make_answer(h.deps)(state, runtime=h.runtime)
+    report = out["report"]
+    assert report.language == "pt"
+    assert report.summary == "Tracing importa [1]."
+    assert "## Fontes" in report.markdown
+    prompt = h.llm.user_prompts["answer"][0]
+    assert "Portuguese" in prompt
+    assert "## Resumo" in prompt
+    assert "## Questões em aberto" in prompt
+
+
+async def test_degraded_report_is_localized() -> None:
+    h = make_harness(FakeLLM())
+    state = _state(all_failed=True)
+    state["notes"] = [n for n in state["notes"] if n.run_id == "r1"]
+    state["plan"] = PLAN.model_copy(update={"language": "pt"})
+    out = await make_answer(h.deps)(state, runtime=h.runtime)
+    report = out["report"]
+    assert report.markdown.startswith("## Resumo\n")
+    assert "não foi possível" in report.summary.lower()
+    assert "## Questões em aberto" in report.markdown

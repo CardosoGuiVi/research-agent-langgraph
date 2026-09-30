@@ -51,11 +51,13 @@ def make_planner(deps: GraphDeps) -> StateNode:
                 )
                 scope.record_llm("planner", usage)
                 planned, strategy = output.sub_questions, output.strategy
+                language = output.language.strip().lower() or "en"
             except Exception as exc:
                 # Node boundary: LLMError, BudgetExceededError or a provider error that survived
                 # the SDK's retries. Degrade to researching the question directly.
                 record_error(scope, "planner", exc)
                 planned, strategy = [], "Planner unavailable; researching the question directly."
+                language = "en"
 
             sub_questions = [
                 SubQuestion(
@@ -72,8 +74,8 @@ def make_planner(deps: GraphDeps) -> StateNode:
                 sub_questions = [
                     SubQuestion(id="sq1", question=question, search_queries=[question])
                 ]
-            plan = ResearchPlan(sub_questions=sub_questions, strategy=strategy)
-            summary.update(sub_questions=[sq.question for sq in sub_questions])
+            plan = ResearchPlan(sub_questions=sub_questions, strategy=strategy, language=language)
+            summary.update(sub_questions=[sq.question for sq in sub_questions], language=language)
 
         return {
             "run_id": run_id,

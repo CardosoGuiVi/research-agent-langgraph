@@ -14,6 +14,7 @@ def _planned(n: int) -> PlannerOutput:
             for i in range(n)
         ],
         strategy="broad then deep",
+        language="en",
     )
 
 
@@ -43,6 +44,7 @@ async def test_planner_without_queries_uses_the_sub_question_as_query() -> None:
     planned = PlannerOutput(
         sub_questions=[PlannedSubQuestion(question="Only this?", search_queries=[], rationale="")],
         strategy="s",
+        language="en",
     )
     h = make_harness(FakeLLM(structured={PlannerOutput: planned}))
     out = await make_planner(h.deps)({"question": "Q", "run_id": "r1"}, runtime=h.runtime)
@@ -78,3 +80,16 @@ async def test_planner_failure_degrades_to_single_sub_question() -> None:
     out = await make_planner(h.deps)({"question": "What is X?", "run_id": "r1"}, runtime=h.runtime)
     assert [sq.question for sq in out["plan"].sub_questions] == ["What is X?"]
     assert h.scope.metrics.errors
+
+
+async def test_planner_records_the_question_language() -> None:
+    planned = _planned(3).model_copy(update={"language": "pt"})
+    h = make_harness(FakeLLM(structured={PlannerOutput: planned}))
+    out = await make_planner(h.deps)({"question": "O que é X?", "run_id": "r1"}, runtime=h.runtime)
+    assert out["plan"].language == "pt"
+
+
+async def test_planner_failure_defaults_language_to_english() -> None:
+    h = make_harness(FakeLLM(structured={PlannerOutput: LLMError("boom")}))
+    out = await make_planner(h.deps)({"question": "O que é X?", "run_id": "r1"}, runtime=h.runtime)
+    assert out["plan"].language == "en"

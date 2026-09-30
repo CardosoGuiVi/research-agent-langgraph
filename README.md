@@ -112,7 +112,7 @@ graph TD;
 3. **research (parallel):** one `Send` per sub-question. Each branch runs up to `MAX_RESEARCH_STEPS` tool turns. Tool calls from the same turn execute concurrently. Searches go through the per-run cache and cap. Pages are fetched with size limits and clean-text extraction. At the step cap, the model is forced (`tool_choice: none`) to write notes. A failing branch records its error and does not abort the run.
 4. **fan-in:** the `merge_sources` reducer dedupes URLs and assigns citation numbers, stable across the whole thread.
 5. **analysis:** the fast model rates coverage per sub-question (`sufficient` / `partial` / `insufficient`), notes conflicts and proposes refined queries. The conditional edge sends only sub-questions with gaps *and* new queries back to research, until `MAX_ITERATIONS`.
-6. **answer:** URLs in the notes are replaced by `[n]`. The smart model streams markdown with a fixed heading contract. The text is then parsed into a `Report`; citations are validated against the sources shown, and a sources list is appended. If every branch failed, a degraded report is returned without calling the model. If synthesis fails, the report falls back to the cited raw notes.
+6. **answer:** URLs in the notes are replaced by `[n]`. The report is written in the question's language: the planner detects it (ISO code in its structured output), and the answer prompt is given the exact localized headings (English and Portuguese tables; other languages get English headings with the body in their language). The smart model streams markdown with a fixed heading contract. The text is then parsed into a `Report`; citations are validated against the sources shown, and a sources list is appended. If every branch failed, a degraded report is returned without calling the model. If synthesis fails, the report falls back to the cited raw notes.
 7. **Observability:** every node logs `node_finished` with latency, and each run logs `run_finished` with the nodes executed, tool calls, tokens per model, estimated cost, latency and errors. All logs are JSON, correlated by `request_id`, `run_id` and `thread_id`.
 
 ## Tech stack and why
@@ -209,7 +209,7 @@ make eval                  # mini eval (live, about $0.30-0.45 per question)
 
 ### Latest results
 
-Run on 2026-09-30. Settings: fast=`claude-haiku-4-5`, smart=`claude-opus-5` (effort medium), search=Tavily, `MAX_ITERATIONS=2`, all prompts v1.
+Run on 2026-09-30. Settings: fast=`claude-haiku-4-5`, smart=`claude-opus-5` (effort medium), search=Tavily, `MAX_ITERATIONS=2`, all prompts v1. Since then, `planner` and `answer` moved to v2 (language support); re-run `make eval` to refresh.
 
 | Question | Schema | Citations resolve | Distinct domains | Relevance | Completeness | Cost (USD) | Latency (s) |
 |---|---|---|---|---|---|---|---|
@@ -271,6 +271,7 @@ docs/adr/         architecture decision records
 - **The eval judge is lenient** (ceiling effect). Next: reference answers or pairwise comparison, and more questions.
 - **No auth or rate limiting** on the API; it is a local demo. Add both before exposing it publicly.
 - **Image size** is about 470 MB (LangChain, lxml, ddgs). Acceptable for now.
+- **Localized headings** exist for English and Portuguese only; add a row to `HEADINGS` in `report.py` for more.
 - Out of scope by design: RAG, multi-agent, MCP.
 
 ### Recording the demo GIF

@@ -42,7 +42,18 @@ Tracing captures prompts, tool calls and token usage [1][2].
 """
 
 
-def _fake_container():  # type: ignore[no-untyped-def]
+PT_ANSWER = """## Resumo
+Observabilidade em produção combina tracing [1] e avaliação [2].
+
+## Principais conclusões
+- Convenções GenAI do OpenTelemetry padronizam spans [1].
+
+## Questões em aberto
+- Como atribuir custo entre agentes.
+"""
+
+
+def _fake_container(answer: str = ANSWER, language: str = "en"):  # type: ignore[no-untyped-def]
     plan = PlannerOutput(
         sub_questions=[
             PlannedSubQuestion(
@@ -57,6 +68,7 @@ def _fake_container():  # type: ignore[no-untyped-def]
             ),
         ],
         strategy="standards, then tools",
+        language=language,
     )
     analysis = AnalysisOutput(
         assessments=[
@@ -65,7 +77,7 @@ def _fake_container():  # type: ignore[no-untyped-def]
         ]
     )
     return build_test_container(
-        llm=FakeLLM(structured={PlannerOutput: plan, AnalysisOutput: analysis}, answer=ANSWER)
+        llm=FakeLLM(structured={PlannerOutput: plan, AnalysisOutput: analysis}, answer=answer)
     )
 
 
@@ -75,20 +87,33 @@ def _free_port() -> int:
         return int(s.getsockname()[1])
 
 
-@pytest.fixture(scope="module")
-def app_url() -> Iterator[str]:
-    if url := os.environ.get("E2E_BASE_URL"):
-        yield url.rstrip("/")
-        return
+def _serve(container):  # type: ignore[no-untyped-def]
     port = _free_port()
-    config = uvicorn.Config(create_app(container=_fake_container()), port=port, log_level="warning")
+    config = uvicorn.Config(create_app(container=container), port=port, log_level="warning")
     server = uvicorn.Server(config)
     thread = threading.Thread(target=server.run, daemon=True)
     thread.start()
     deadline = time.monotonic() + 10
     while not server.started and time.monotonic() < deadline:
         time.sleep(0.05)
-    yield f"http://127.0.0.1:{port}"
+    return server, thread, f"http://127.0.0.1:{port}"
+
+
+@pytest.fixture(scope="module")
+def app_url() -> Iterator[str]:
+    if url := os.environ.get("E2E_BASE_URL"):
+        yield url.rstrip("/")
+        return
+    server, thread, url = _serve(_fake_container())
+    yield url
+    server.should_exit = True
+    thread.join(timeout=5)
+
+
+@pytest.fixture(scope="module")
+def app_url_pt() -> Iterator[str]:
+    server, thread, url = _serve(_fake_container(PT_ANSWER, "pt"))
+    yield url
     server.should_exit = True
     thread.join(timeout=5)
 
@@ -112,3 +137,18 @@ def test_question_to_cited_report(app_url: str, page) -> None:  # type: ignore[n
     if not os.environ.get("E2E_BASE_URL"):
         Path("test-results").mkdir(exist_ok=True)
         page.screenshot(path="test-results/ui.png", full_page=True)
+
+
+def test_portuguese_report_renders_localized_sources(app_url_pt: str, page) -> None:  # type: ignore[no-untyped-def]
+    expect = playwright_api.expect
+    page.goto(app_url_pt)
+    page.get_by_label("Question").fill(
+        "Quais as principais tecnologias de observabilidade para IA?"
+    )
+    page.get_by_role("button", name="Research").click()
+    report = page.locator("#report")
+    expect(report.get_by_role("heading", name="Resumo")).to_be_visible(timeout=15_000)
+    expect(report.get_by_role("heading", name="Fontes")).to_be_visible()
+    expect(report.locator("a.cite").first).to_be_visible()
+    expect(report.locator("ol.sources li").first).to_contain_text("[1]")
+    expect(report).not_to_contain_text("## Fontes")

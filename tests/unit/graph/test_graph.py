@@ -20,6 +20,7 @@ PLAN = PlannerOutput(
         PlannedSubQuestion(question="Cost tracking?", search_queries=["llm cost"], rationale=""),
     ],
     strategy="s",
+    language="en",
 )
 SEARCH = FakeSearchProvider(
     {
@@ -111,6 +112,7 @@ async def test_follow_up_on_same_thread_reuses_prior_findings() -> None:
             )
         ],
         strategy="s",
+        language="en",
     )
     llm = FakeLLM(
         structured={

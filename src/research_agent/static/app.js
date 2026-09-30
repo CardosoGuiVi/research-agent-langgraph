@@ -35,7 +35,11 @@ function inline(text, validIds) {
 
 function renderMarkdown(md, sources) {
   const validIds = new Set(sources.map((s) => s.id));
-  const body = md.split(/\n## Sources\n/)[0];
+  // The appended sources list is the last "## <title>" section whose lines are all "[n] ...";
+  // its title is localized (Sources, Fontes, ...), so match by shape, not by name.
+  const tail = md.match(/\n## ([^\n]+)\n(?:\[\d+\] [^\n]*(?:\n|$))+\s*$/);
+  const body = tail ? md.slice(0, tail.index) : md;
+  const sourcesTitle = tail ? tail[1] : "Sources";
   const out = [];
   let list = null;
   const closeList = () => { if (list) { out.push(`</${list}>`); list = null; } };
@@ -61,7 +65,7 @@ function renderMarkdown(md, sources) {
   }
   closeList();
   if (sources.length) {
-    out.push("<h2>Sources</h2><ol class=\"sources\">");
+    out.push(`<h2>${escapeHtml(sourcesTitle)}</h2><ol class="sources">`);
     for (const s of sources) {
       const title = escapeHtml(s.title || s.url);
       const link = /^https?:\/\//.test(s.url)  // never render javascript: or data: links

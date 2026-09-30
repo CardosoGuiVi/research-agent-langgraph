@@ -13,7 +13,7 @@ from research_agent.graph.nodes._common import record_error, track_node, truncat
 from research_agent.graph.state import ResearchState
 from research_agent.llm.base import Tier, Usage
 from research_agent.prompts import load_prompt
-from research_agent.report import build_report
+from research_agent.report import Headings, build_report, headings_for, language_name
 
 _NOTES_BUDGET_CHARS = 60_000
 _SOURCE_EXCERPT_CHARS = 300
@@ -59,16 +59,23 @@ def make_answer(deps: GraphDeps) -> StateNode:
         scope = deps.scope(runtime)
         emit = emitter(runtime)
         question = state["question"]
+        plan = state.get("plan")
+        language = plan.language if plan else "en"
+        headings = headings_for(language)
         failed = failed_sub_questions(state)
         notes, sources = _select(state)
         async with track_node(scope, emit, "answer") as summary:
             if not notes:
-                report = _degraded(question, failed, "every sub-question failed")
+                report = _degraded(question, failed, "every sub-question failed", language)
                 summary.update(degraded=True)
                 return {"report": report}
 
             user = prompt.render_user(
                 question=question,
+                language_name=language_name(language),
+                summary_heading=headings.summary,
+                key_findings_heading=headings.key_findings,
+                open_questions_heading=headings.open_questions,
                 failed=", ".join(failed) or "(none)",
                 notes=_notes_markdown(notes, sources),
                 sources="\n".join(
@@ -94,11 +101,15 @@ def make_answer(deps: GraphDeps) -> StateNode:
                 error = record_error(scope, "answer", exc)
                 emit({"type": "answer_reset", "reason": "synthesis failed"})
                 markdown = (
-                    f"## Summary\nThe synthesis step failed ({error}), so this report lists the "
-                    f"raw research notes instead.\n\n{_notes_markdown(notes, sources)}"
+                    f"## {headings.summary}\n{headings.synthesis_failed.format(error=error)}"
+                    f"\n\n{_notes_markdown(notes, sources)}"
                 ).replace("\n### ", "\n## ")
             report = build_report(
-                question=question, markdown=markdown, sources=sources, failed_sub_questions=failed
+                question=question,
+                markdown=markdown,
+                sources=sources,
+                failed_sub_questions=failed,
+                language=language,
             )
             summary.update(
                 cited_sources=len(report.sources), invalid_citations=report.invalid_citations
@@ -108,12 +119,17 @@ def make_answer(deps: GraphDeps) -> StateNode:
     return answer
 
 
-def _degraded(question: str, failed: list[str], reason: str) -> Report:
-    open_q = "\n".join(f"- Not researched: {q}" for q in failed) or "- (none)"
+def _degraded(question: str, failed: list[str], reason: str, language: str) -> Report:
+    h: Headings = headings_for(language)
+    open_q = "\n".join(f"- {h.not_researched.format(question=q)}" for q in failed) or "- (none)"
     markdown = (
-        f"## Summary\nResearch could not be completed: {reason}. No sources were found, so no "
-        f"answer is given.\n\n## Open Questions\n{open_q}"
+        f"## {h.summary}\n{h.research_failed.format(reason=reason)}\n\n"
+        f"## {h.open_questions}\n{open_q}"
     )
     return build_report(
-        question=question, markdown=markdown, sources=[], failed_sub_questions=failed
+        question=question,
+        markdown=markdown,
+        sources=[],
+        failed_sub_questions=failed,
+        language=language,
     )
