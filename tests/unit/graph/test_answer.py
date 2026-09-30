@@ -16,13 +16,15 @@ SOURCES = [
     Source(id=1, url="https://a.example", title="A", excerpt="aaa", fetched=True),
     Source(id=2, url="https://b.example", title="B", excerpt="bbb"),
     Source(id=3, url="https://old.example", title="Old", excerpt="old"),
+    Source(id=4, url="https://unrelated.example", title="Unrelated", excerpt="u"),
+    Source(id=5, url="https://c.example", title="C", excerpt="c"),
 ]
 ANSWER = """## Summary
 Tracing matters [1] and old context helps [3].
 
 ## Key Findings
 - Tracing [1].
-- Made up [7].
+- Made up [4]. Status codes [429, 503] stay literal.
 
 ## Tracing
 Details [1].
@@ -56,7 +58,7 @@ def _state(*, all_failed: bool = False) -> ResearchState:
                 iteration=1,
                 queries=["t"],
                 notes="- tracing (https://a.example)",
-                source_urls=["https://a.example", "https://b.example"],
+                source_urls=["https://a.example", "https://b.example", "https://c.example"],
                 failed=all_failed,
                 error="x" if all_failed else None,
             ),
@@ -79,7 +81,8 @@ async def test_answer_streams_tokens_and_builds_report_with_citations() -> None:
     report = out["report"]
     assert report.summary.startswith("Tracing matters [1]")
     assert [s.id for s in report.sources] == [1, 3]
-    assert report.invalid_citations == [7]
+    assert report.invalid_citations == [4]  # exists on the thread but was not shown
+    assert "[429, 503]" in report.markdown
     assert report.failed_sub_questions == ["Evals?"]
     tokens = "".join(e["text"] for e in h.events if e["type"] == "token")
     assert tokens == ANSWER

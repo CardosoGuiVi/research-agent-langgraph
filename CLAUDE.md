@@ -11,7 +11,8 @@ Research agent: FastAPI -> LangGraph StateGraph -> Claude (langchain-anthropic).
 - `make test-e2e` — Playwright smoke test (`@pytest.mark.e2e`, needs `make up`)
 - `make eval` — live mini-eval, results in `evals/results/` (gitignored)
 - `make up` / `down` / `logs` — docker compose
-- `make studio` — LangGraph Studio (`langgraph dev`)
+- `make studio` — LangGraph Studio (`langgraph dev`, graph in `src/research_agent/studio.py`)
+- `make graph` — export Mermaid to `docs/graph.mmd` (no keys needed)
 - Single test: `uv run pytest tests/unit/test_config.py::test_name -q`
 
 ## Architecture
@@ -33,7 +34,10 @@ analysis -> (research again for gaps | answer) -> END. Iteration cap enforced in
 - `citations.py` / `report.py` — [n] parsing/validation; streamed markdown -> `Report`.
 - `prompts/*.md` — versioned prompts (front matter `version`).
 - `container.py` — composition root (wires adapters; tests build it with fakes).
-- `api/` — FastAPI app factory, routes, schemas, middleware.
+- `service.py` — runs/streams the graph, thread view, per-thread locks (409 when busy).
+- `api/` — FastAPI app factory, routes (REST + native SSE), schemas, middleware; `static/` UI.
+- `evals/` — dataset.yaml, deterministic checks (unit-tested), judge; results gitignored.
+- `docs/adr/` — MADR decision records; add one for any significant decision.
 
 ## Conventions
 - TDD: failing test first. Tests are fast and deterministic; no network in the default suite.
@@ -44,6 +48,12 @@ analysis -> (research again for gaps | answer) -> END. Iteration cap enforced in
 - Prompts live in `src/research_agent/prompts/*.md` (versioned), never inline.
 - Conventional Commits, one per green milestone. Never push.
 - Dependencies pinned with `==`; `uv.lock` is committed.
+
+## Gotchas
+- Citation rule: a `[n]` group is a citation only if all numbers are within 1..max source id;
+  larger numbers (HTTP codes etc.) stay literal (found by the eval, see ADR 4).
+- Studio passes no run context; `GraphDeps.scope()` falls back to a per-thread scope.
+- `structlog` is pinned to 25.x because `langgraph-api` (studio group) requires <26.
 
 ## Guardrails
 - Never read, create or edit `.env` (denied in `.claude/settings.json`). Maintain `.env.example` only.

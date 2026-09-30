@@ -75,29 +75,50 @@ def _expand(group: str) -> list[int]:
     return ids
 
 
-def extract_citation_ids(text: str) -> list[int]:
+def _citation_groups(text: str, max_id: int | None) -> list[tuple[re.Match[str], list[int]]]:
+    """Bracket groups that are citations.
+
+    A group counts only if every number is within 1..max_id; anything else (e.g. HTTP status
+    codes "[429, 503]") is literal text and is never rewritten.
+    """
+    groups = []
+    for match in _CITATION_RE.finditer(text):
+        ids = _expand(match.group(1))
+        if max_id is None or all(1 <= i <= max_id for i in ids):
+            groups.append((match, ids))
+    return groups
+
+
+def extract_citation_ids(text: str, max_id: int | None = None) -> list[int]:
     """Distinct citation numbers in order of first appearance."""
     seen: dict[int, None] = {}
-    for match in _CITATION_RE.finditer(text):
-        for i in _expand(match.group(1)):
+    for _, ids in _citation_groups(text, max_id):
+        for i in ids:
             seen.setdefault(i, None)
     return list(seen)
 
 
 def sanitize_citations(text: str, valid_ids: set[int]) -> tuple[str, list[int]]:
-    """Drop citation numbers that map to no source. Returns (clean_text, invalid_ids)."""
-    invalid: dict[int, None] = {}
+    """Drop in-range citation numbers that map to no listed source.
 
-    def repl(match: re.Match[str]) -> str:
-        ids = _expand(match.group(1))
+    Returns (clean_text, invalid_ids). Out-of-range bracket groups are left untouched.
+    """
+    max_id = max(valid_ids, default=0)
+    invalid: dict[int, None] = {}
+    pieces: list[str] = []
+    last = 0
+    for match, ids in _citation_groups(text, max_id):
         kept = [i for i in ids if i in valid_ids]
         for i in ids:
             if i not in valid_ids:
                 invalid.setdefault(i, None)
-        return "".join(f"[{i}]" for i in kept)
-
-    clean = _CITATION_RE.sub(repl, text)
-    clean = re.sub(r"[ \t]+([.,;:])", r"\1", clean)  # "claim [9]." -> "claim ."-> "claim."
+        pieces.append(text[last : match.start()])
+        pieces.append("".join(f"[{i}]" for i in kept))
+        last = match.end()
+    pieces.append(text[last:])
+    clean = "".join(pieces)
+    if invalid:
+        clean = re.sub(r"[ \t]+([.,;:])", r"\1", clean)  # "claim [9]." -> "claim ." -> "claim."
     return clean, list(invalid)
 
 

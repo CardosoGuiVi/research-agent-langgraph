@@ -38,7 +38,7 @@ def test_extract_citation_ids_handles_grouped_and_ranged_forms() -> None:
 
 def test_sanitize_removes_unknown_citations_and_reports_them() -> None:
     text = "A [1]. B [9]. C [2][9]."
-    clean, invalid = sanitize_citations(text, valid_ids={1, 2})
+    clean, invalid = sanitize_citations(text, valid_ids={1, 2, 10})
     assert clean == "A [1]. B. C [2]."
     assert invalid == [9]
 
@@ -50,3 +50,18 @@ def test_replace_urls_with_citations() -> None:
     assert "- Fact one [1]" in out
     assert "- Fact two [2]" in out
     assert "https://c.example" in out
+
+
+def test_bracketed_numbers_beyond_the_source_range_are_literal_text() -> None:
+    # Found by the eval: "[429, 500, 503]" (HTTP status codes) is not a citation.
+    text = "Retry on [429, 500, 503] with backoff [1]. See [2]."
+    clean, invalid = sanitize_citations(text, valid_ids={1, 2, 3})
+    assert clean == text
+    assert invalid == []
+    assert extract_citation_ids(text, max_id=3) == [1, 2]
+
+
+def test_out_of_list_id_within_range_is_still_removed() -> None:
+    clean, invalid = sanitize_citations("A [2]. B [3].", valid_ids={1, 3})
+    assert clean == "A. B [3]."
+    assert invalid == [2]

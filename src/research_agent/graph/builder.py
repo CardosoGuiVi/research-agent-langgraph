@@ -36,7 +36,7 @@ _CHECKPOINT_TYPES: list[type[Any]] = [
 
 
 def new_checkpointer() -> BaseCheckpointSaver[str]:
-    """In-memory checkpointer (see ADR 0002 for why not Postgres yet)."""
+    """In-memory checkpointer (see ADR 0005 for why not Postgres yet)."""
     return InMemorySaver(serde=JsonPlusSerializer(allowed_msgpack_modules=_CHECKPOINT_TYPES))
 
 

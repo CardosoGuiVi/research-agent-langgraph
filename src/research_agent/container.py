@@ -44,18 +44,19 @@ def make_search_provider(settings: Settings) -> SearchProvider:
     )
 
 
-def build_container(
+def build_deps(
     settings: Settings,
     *,
     llm: LLM | None = None,
     search_provider: SearchProvider | None = None,
     fetcher: PageFetcher | None = None,
-) -> Container:
+    clients: list[httpx.AsyncClient] | None = None,
+) -> GraphDeps:
     """Real adapters by default; tests inject fakes for any of them."""
-    clients: list[httpx.AsyncClient] = []
     if fetcher is None:
         http = httpx.AsyncClient(timeout=settings.fetch_timeout_s)
-        clients.append(http)
+        if clients is not None:
+            clients.append(http)
         fetcher = HttpPageFetcher(
             http,
             max_bytes=settings.fetch_max_bytes,
@@ -63,11 +64,24 @@ def build_container(
             timeout_s=settings.fetch_timeout_s,
             attempts=settings.tool_max_attempts,
         )
-    deps = GraphDeps(
+    return GraphDeps(
         settings=settings,
         llm=llm or AnthropicLLM(settings),
         search_provider=search_provider or make_search_provider(settings),
         fetcher=fetcher,
+    )
+
+
+def build_container(
+    settings: Settings,
+    *,
+    llm: LLM | None = None,
+    search_provider: SearchProvider | None = None,
+    fetcher: PageFetcher | None = None,
+) -> Container:
+    clients: list[httpx.AsyncClient] = []
+    deps = build_deps(
+        settings, llm=llm, search_provider=search_provider, fetcher=fetcher, clients=clients
     )
     graph = build_graph(deps, checkpointer=new_checkpointer())
     return Container(settings=settings, service=ResearchService(graph, deps), _http_clients=clients)

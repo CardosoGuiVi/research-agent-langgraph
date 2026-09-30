@@ -68,7 +68,7 @@ def build_report(
 ) -> Report:
     valid_ids = {s.id for s in sources}
     clean_md, invalid = sanitize_citations(markdown.strip(), valid_ids)
-    cited = set(extract_citation_ids(clean_md))
+    cited = set(extract_citation_ids(clean_md, max_id=max(valid_ids, default=0)))
     refs = [
         SourceRef(id=s.id, url=s.url, title=s.title, fetched=s.fetched)
         for s in sources

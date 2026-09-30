@@ -1,0 +1,40 @@
+# Mini eval set. `expected` lists aspects a good answer should touch (guidance for the judge,
+# not a strict checklist). `min_sources` is the minimum number of distinct cited domains.
+version: 1
+questions:
+  - id: observability
+    question: Analyze the main observability technologies for AI applications in production.
+    expected: [tracing of LLM calls, OpenTelemetry GenAI conventions, evaluation, cost/token monitoring, named tools such as Langfuse or Arize Phoenix]
+    min_sources: 4
+  - id: vector-dbs
+    question: Compare pgvector, Qdrant and Pinecone for a mid-size RAG workload.
+    expected: [performance/scalability, operational model (self-hosted vs managed), filtering, cost]
+    min_sources: 3
+  - id: prompt-injection
+    question: What are the most effective defenses against prompt injection in LLM agents?
+    expected: [indirect injection, privilege separation / least privilege, input/output filtering, human approval, limits of each defense]
+    min_sources: 3
+  - id: rate-limits
+    question: How should a Python backend handle rate limits and retries when calling LLM APIs?
+    expected: [429 handling, exponential backoff with jitter, retry-after, idempotency, queueing/concurrency limits]
+    min_sources: 3
+  - id: postgres-queue
+    question: Is PostgreSQL a good choice as a job queue compared with Redis or RabbitMQ?
+    expected: [SKIP LOCKED, throughput limits, operational simplicity, when to switch]
+    min_sources: 3
+  - id: llm-evals
+    question: What approaches exist for evaluating LLM applications before release?
+    expected: [offline datasets, LLM-as-judge and its biases, human review, regression testing, metrics]
+    min_sources: 3
+  - id: fastapi-async
+    question: When does async actually improve performance in FastAPI services, and when does it hurt?
+    expected: [I/O-bound vs CPU-bound, blocking calls in async endpoints, threadpool, database drivers]
+    min_sources: 3
+  - id: eu-ai-act
+    question: What obligations does the EU AI Act impose on companies deploying general-purpose AI models?
+    expected: [risk categories, GPAI obligations, transparency, timelines, provider vs deployer]
+    min_sources: 3
+  - id: sse-vs-websockets
+    question: Server-Sent Events vs WebSockets for streaming LLM responses to a browser.
+    expected: [unidirectional vs bidirectional, proxies/HTTP compatibility, reconnection, when each fits]
+    min_sources: 3

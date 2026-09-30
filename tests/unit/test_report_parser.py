@@ -41,6 +41,7 @@ def test_build_report_maps_citations_and_drops_invalid_ones() -> None:
         Source(id=1, url="https://otel.example", title="OTel", excerpt="x", fetched=True),
         Source(id=2, url="https://evals.example", title="Evals", excerpt="y"),
         Source(id=3, url="https://unused.example", title="Unused", excerpt="z"),
+        Source(id=10, url="https://ten.example", title="Ten", excerpt="t"),
     ]
     report = build_report(
         question="q", markdown=MD, sources=sources, failed_sub_questions=["sq3: x"]
