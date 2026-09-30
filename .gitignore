@@ -1,0 +1,51 @@
+# --- Secrets (never commit) ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+.aws/
+.gcp/
+credentials
+credentials.json
+*credentials*.json
+service-account*.json
+.netrc
+.pypirc
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+build/
+dist/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+
+# --- Local data / volumes / tool state ---
+data/
+*.sqlite
+*.sqlite3
+*.db
+.langgraph_api/
+
+# --- Eval outputs (may contain raw API responses) ---
+evals/results/*
+!evals/results/.gitkeep
+
+# --- E2E artifacts ---
+test-results/
+playwright-report/
+
+# --- Editors / OS ---
+.idea/
+.vscode/
+.DS_Store
