@@ -1,0 +1,18 @@
+services:
+  api:
+    build: .
+    image: research-agent:local
+    env_file:
+      - path: .env
+        required: true
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /home/app/.cache
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
