@@ -26,6 +26,7 @@ function el(tag, cls, text) {
 function inline(text, validIds) {
   let s = escapeHtml(text);
   s = s.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+  s = s.replace(/(^|[^*\w])\*(?!\s)([^*\n]+?)\*(?![*\w])/g, "$1<em>$2</em>");
   s = s.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
     (_, label, url) => `<a href="${url}" target="_blank" rel="noopener noreferrer">${label}</a>`);
   s = s.replace(/\[(\d{1,3})\]/g, (m, n) =>

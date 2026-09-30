@@ -8,8 +8,9 @@ A research agent that plans a question, researches sub-questions in parallel on 
 
 ## Demo
 
-> **Demo GIF placeholder:** question in, live graph trace (planner, parallel research lanes, coverage check), streamed report with clickable citations. See [Recording the demo GIF](#recording-the-demo-gif).
-<!-- Replace with: ![Demo](docs/demo.gif) -->
+![Demo: a question goes in, the graph runs live (planner, five parallel research lanes, coverage check) and a cited report streams out](docs/demo.gif)
+
+A real run (sped up): 5 sub-questions researched in parallel, 20 searches, 14 pages read, 41 cited sources, $0.43, 103 s. [Full-size screenshot](docs/screenshot.png).
 
 ```bash
 curl -s -X POST localhost:8000/research \
@@ -276,7 +277,7 @@ docs/adr/         architecture decision records
 
 ### Recording the demo GIF
 
-Run `make up`, open `http://localhost:8000`, and record the page from question to finished report (e.g. with [Kap](https://getkap.co/) or Peek) into `docs/demo.gif`.
+The GIF was captured with Playwright (one frame about every 0.7 s during a real run, identical frames merged, one palette per frame) and assembled with Pillow. To refresh it, run a question at `http://localhost:8000` and capture the browser; a run costs about $0.40.
 
 ## License
 

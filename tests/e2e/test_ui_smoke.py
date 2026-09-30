@@ -31,7 +31,7 @@ ANSWER = """## Summary
 Production observability for AI apps combines tracing [1] with evaluation [2].
 
 ## Key Findings
-- OpenTelemetry GenAI conventions standardise spans [1].
+- AI systems fail *silently*; OpenTelemetry GenAI conventions standardise spans [1].
 - Langfuse offers open-source tracing and evals [2].
 
 ## Tracing
@@ -134,6 +134,7 @@ def test_question_to_cited_report(app_url: str, page) -> None:  # type: ignore[n
     expect(first_cite).to_be_visible()
     expect(report.locator("ol.sources li").first).to_contain_text("[")
     expect(page.get_by_role("button", name="Ask a follow-up")).to_be_visible()
+    expect(report.locator("em", has_text="silently")).to_be_visible()
     if not os.environ.get("E2E_BASE_URL"):
         Path("test-results").mkdir(exist_ok=True)
         page.screenshot(path="test-results/ui.png", full_page=True)

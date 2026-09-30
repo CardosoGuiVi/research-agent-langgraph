@@ -7,6 +7,7 @@ repos:
       - id: check-yaml
       - id: check-toml
       - id: check-added-large-files
+        exclude: ^docs/demo\.gif$  # the README demo GIF (~2 MB); the 500 KB limit stays for everything else
       - id: detect-private-key
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.30.0
