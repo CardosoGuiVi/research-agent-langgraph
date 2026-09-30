@@ -20,6 +20,7 @@ from research_agent.citations import extract_citation_ids, sanitize_citations
 from research_agent.domain import Report, ReportSection, Source, SourceRef
 
 _HEADING_RE = re.compile(r"^##\s+(.+?)\s*$", re.M)
+_TITLE_RE = re.compile(r"\A\s*#\s+[^\n]*\n+")  # a leading "# Title" line (level 1)
 _BULLET_RE = re.compile(r"^\s*(?:[-*+]|\d+[.)])\s+(.*)$")
 
 
@@ -93,7 +94,13 @@ def _keys(*names: str) -> set[str]:
     return {n.lower() for n in names}
 
 
+def strip_title(markdown: str) -> str:
+    """Drop a leading level-1 title; the report already carries the question."""
+    return _TITLE_RE.sub("", markdown, count=1)
+
+
 def parse_report_markdown(markdown: str, headings: Headings = _EN) -> ParsedMarkdown:
+    markdown = strip_title(markdown)
     summary_keys = _keys("summary", headings.summary)
     findings_keys = _keys("key findings", "findings", headings.key_findings)
     open_keys = _keys("open questions", "limitations", headings.open_questions)
@@ -138,7 +145,7 @@ def build_report(
 ) -> Report:
     headings = headings_for(language)
     valid_ids = {s.id for s in sources}
-    clean_md, invalid = sanitize_citations(markdown.strip(), valid_ids)
+    clean_md, invalid = sanitize_citations(strip_title(markdown).strip(), valid_ids)
     cited = set(extract_citation_ids(clean_md, max_id=max(valid_ids, default=0)))
     refs = [
         SourceRef(id=s.id, url=s.url, title=s.title, fetched=s.fetched)

@@ -53,3 +53,14 @@ def test_build_report_maps_citations_and_drops_invalid_ones() -> None:
     assert "[1] [OTel](https://otel.example)" in report.markdown
     assert report.failed_sub_questions == ["sq3: x"]
     assert "[9]" not in report.sections[0].content
+
+
+def test_leading_level_one_title_is_dropped() -> None:
+    # Seen in a real run: the model prefixed the report with "# <title>" despite the contract.
+    md = "# Observability for AI\n\n## Summary\nTracing [1].\n\n## Key Findings\n- A [1]."
+    parsed = parse_report_markdown(md)
+    assert parsed.summary == "Tracing [1]."
+    assert parsed.sections == []
+    sources = [Source(id=1, url="https://otel.example", title="OTel", excerpt="x")]
+    report = build_report(question="q", markdown=md, sources=sources, failed_sub_questions=[])
+    assert report.markdown.startswith("## Summary")

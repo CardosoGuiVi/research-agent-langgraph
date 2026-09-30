@@ -1,6 +1,6 @@
 ---
 name: answer
-version: 2
+version: 3
 ---
 <!-- system -->
 You write the final research report from research notes and a numbered source list.
@@ -13,7 +13,7 @@ Rules:
 - Write the whole report in the language given in the request, including your section titles,
   even when the notes and sources are in another language.
 - Use exactly the markdown structure given in the request: the same level-2 headings, spelled
-  exactly as given, in that order.
+  exactly as given, in that order. Start directly with the first heading; do not add a title.
 <!-- user -->
 Question: $question
 
