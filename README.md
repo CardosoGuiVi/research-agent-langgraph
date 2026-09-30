@@ -216,15 +216,17 @@ Run on 2026-09-30. Settings: fast=`claude-haiku-4-5`, smart=`claude-opus-5` (eff
 | observability | yes | yes | 31 | 5/5 | 5/5 | 0.430 | 103 |
 | vector-dbs | yes | yes | 34 | 5/5 | 5/5 | 0.446 | 88 |
 | prompt-injection | yes | yes | 35 | 5/5 | 5/5 | 0.370 | 88 |
-| rate-limits | yes | no* | 32 | 5/5 | 5/5 | 0.454 | 95 |
+| rate-limits | yes | yes* | 29 | 5/5 | 5/5 | 0.403 | 87 |
 | postgres-queue | yes | yes | 26 | 5/5 | 5/5 | 0.424 | 86 |
 | llm-evals | yes | yes | 31 | 5/5 | 5/5 | 0.424 | 84 |
-| fastapi-async, eu-ai-act, sse-vs-websockets | not run: API credit ran out mid-eval | | | | | | |
-| **6 of 9 ran** | | **5/6 pass all checks** | | **5.0** | **5.0** | **2.55 total** | **91 avg** |
+| fastapi-async | yes | yes | 22 | 5/5 | 5/5 | 0.354 | 82 |
+| eu-ai-act | yes | yes | 23 | 5/5 | 5/5 | 0.371 | 96 |
+| sse-vs-websockets | yes | yes | 28 | 5/5 | 5/5 | 0.371 | 76 |
+| **9 of 9 ran** | | **9/9 pass all checks** | | **5.0** | **5.0** | **3.59 total** | **88 avg** |
 
-\* A real bug caught by the eval: the report listed HTTP status codes as `[429, 500, 502, 503, 504]`, and the citation parser treated them as invalid citations and removed them from the text. It is now fixed: bracketed numbers outside the source range stay literal text, with regression tests ([ADR 4](docs/adr/0004-streamed-markdown-report.md)). The row shows the pre-fix result. Re-run `make eval` for fresh numbers.
+\* A real bug caught by the eval: the first run of `rate-limits` failed the citation check. The report listed HTTP status codes as `[429, 500, 502, 503, 504]`, and the citation parser treated them as invalid citations and removed them from the text. It is now fixed: bracketed numbers outside the source range stay literal text, with regression tests ([ADR 4](docs/adr/0004-streamed-markdown-report.md)). The row shows the re-run after the fix.
 
-**Reading these numbers honestly:** the judge gave 5/5 everywhere, which suggests a ceiling effect. The rubric or dataset should be made harder (e.g. reference answers or pairwise comparison) before the score can discriminate between prompt versions. The three remaining questions still need a run.
+**Reading these numbers honestly:** the judge gave 5/5 everywhere, which suggests a ceiling effect. The rubric or dataset should be made harder (e.g. reference answers or pairwise comparison) before the score can discriminate between prompt versions.
 
 ## Project structure
 
