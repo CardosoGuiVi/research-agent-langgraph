@@ -12,7 +12,7 @@ from typing import cast
 from research_agent.config import Settings
 from research_agent.graph.builder import build_graph
 from research_agent.graph.context import GraphDeps
-from research_agent.llm.base import LLM
+from research_agent.llm.base import LLMProvider
 from research_agent.tools.fetch import PageFetcher
 from research_agent.tools.search import SearchProvider
 
@@ -20,7 +20,7 @@ from research_agent.tools.search import SearchProvider
 def mermaid() -> str:
     deps = GraphDeps(
         settings=Settings(_env_file=None),
-        llm=cast(LLM, None),
+        llm=cast(LLMProvider, None),
         search_provider=cast(SearchProvider, None),
         fetcher=cast(PageFetcher, None),
     )

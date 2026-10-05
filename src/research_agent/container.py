@@ -6,11 +6,12 @@ from dataclasses import dataclass, field
 
 import httpx
 
-from research_agent.config import SearchProviderName, Settings
+from research_agent.config import LLMProviderName, SearchProviderName, Settings
 from research_agent.graph.builder import build_graph, new_checkpointer
 from research_agent.graph.context import GraphDeps
 from research_agent.llm.anthropic import AnthropicLLM
-from research_agent.llm.base import LLM
+from research_agent.llm.base import LLMProvider
+from research_agent.llm.openrouter import OpenRouterProvider
 from research_agent.service import ResearchService
 from research_agent.tools.fetch import HttpPageFetcher, PageFetcher
 from research_agent.tools.search import DuckDuckGoSearch, SearchProvider, TavilySearch
@@ -25,6 +26,12 @@ class Container:
     async def aclose(self) -> None:
         for client in self._http_clients:
             await client.aclose()
+
+
+def make_llm(settings: Settings) -> LLMProvider:
+    if settings.llm_provider is LLMProviderName.OPENROUTER:
+        return OpenRouterProvider(settings)
+    return AnthropicLLM(settings)
 
 
 def make_search_provider(settings: Settings) -> SearchProvider:
@@ -47,7 +54,7 @@ def make_search_provider(settings: Settings) -> SearchProvider:
 def build_deps(
     settings: Settings,
     *,
-    llm: LLM | None = None,
+    llm: LLMProvider | None = None,
     search_provider: SearchProvider | None = None,
     fetcher: PageFetcher | None = None,
     clients: list[httpx.AsyncClient] | None = None,
@@ -66,7 +73,7 @@ def build_deps(
         )
     return GraphDeps(
         settings=settings,
-        llm=llm or AnthropicLLM(settings),
+        llm=llm or make_llm(settings),
         search_provider=search_provider or make_search_provider(settings),
         fetcher=fetcher,
     )
@@ -75,7 +82,7 @@ def build_deps(
 def build_container(
     settings: Settings,
     *,
-    llm: LLM | None = None,
+    llm: LLMProvider | None = None,
     search_provider: SearchProvider | None = None,
     fetcher: PageFetcher | None = None,
 ) -> Container:

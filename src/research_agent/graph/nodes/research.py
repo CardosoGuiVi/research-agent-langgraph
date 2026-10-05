@@ -16,8 +16,7 @@ from research_agent.domain import ResearchNote, Source
 from research_agent.graph.context import Emit, GraphDeps, RunScope, emitter
 from research_agent.graph.nodes._common import record_error, track_node, truncate
 from research_agent.graph.state import ResearchTask
-from research_agent.llm.anthropic import extract_text
-from research_agent.llm.base import Tier
+from research_agent.llm.base import Tier, extract_text
 from research_agent.prompts import load_prompt
 from research_agent.tools.errors import BudgetExceededError, SearchError, ToolError
 

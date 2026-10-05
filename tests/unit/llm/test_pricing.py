@@ -20,3 +20,8 @@ def test_dated_model_ids_resolve_to_base_price() -> None:
     assert estimate_cost_usd("claude-haiku-4-5-20251001", 1_000_000, 0) == pytest.approx(1.0)
     # "claude-opus-5-5" must not be priced as "claude-opus-5"
     assert estimate_cost_usd("claude-opus-5-5", 1_000_000, 0) == pytest.approx(4.0)
+
+
+def test_openrouter_model_cost() -> None:
+    cost = estimate_cost_usd("deepseek/deepseek-v4-flash", 1_000_000, 100_000)
+    assert cost == pytest.approx(0.03 + 0.128)

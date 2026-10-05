@@ -1,1 +1,1 @@
-"""LLM port (interface) and the Anthropic adapter."""
+"""LLMProvider port (interface) and its adapters: Anthropic (default) and OpenRouter."""

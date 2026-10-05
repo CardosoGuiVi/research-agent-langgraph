@@ -1,6 +1,8 @@
 """Per-model token prices for cost estimation (USD per 1M tokens).
 
-Source: Anthropic pricing page, checked 2026-09-30. Update when models/prices change.
+Sources: Anthropic pricing page (checked 2026-09-30) and the OpenRouter model catalog
+(`GET /api/v1/models`, checked 2026-10-05). Update when models/prices change; OpenRouter
+prices can change without notice. OpenRouter ids are "vendor/model".
 Estimates ignore prompt-cache discounts, so they are an upper bound.
 """
 
@@ -16,6 +18,9 @@ PRICES_PER_MTOK: dict[str, tuple[float, float]] = {
     "claude-sonnet-5": (2.0, 10.0),
     "claude-sonnet-4-6": (3.0, 15.0),
     "claude-haiku-4-5": (1.0, 5.0),
+    # OpenRouter
+    "deepseek/deepseek-v4-flash": (0.03, 1.28),
+    "deepseek/deepseek-v4-pro": (0.209, 0.418),
 }
 
 _KEYS_LONGEST_FIRST = sorted(PRICES_PER_MTOK, key=len, reverse=True)
