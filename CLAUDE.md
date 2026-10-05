@@ -22,7 +22,9 @@ analysis -> (research again for gaps | answer) -> END. Iteration cap enforced in
 - `config.py` — pydantic-settings; secrets are `SecretStr`.
 - `logging.py` — structlog JSON + secret redaction processor.
 - `domain.py` — Pydantic models (plan, notes, sources, assessments, report).
-- `llm/` — `LLM` Protocol (structured / tool_step / stream_text), Anthropic adapter, pricing.
+- `llm/` — `LLMProvider` Protocol (structured / tool_step / stream_text), Anthropic adapter
+  (default) and OpenRouter adapter (`ChatOpenAI` + base_url); `container.make_llm` picks one from
+  `LLM_PROVIDER`. Nodes import only `llm.base` (enforced by a test in `test_container.py`).
 - `tools/` — `SearchProvider` (Tavily, DuckDuckGo), per-run budget + cache, SSRF-safe fetcher,
   retry/backoff helper, error hierarchy (`TransientError` = retryable).
 - `graph/state.py` — typed state; `notes`/`sources`/`questions` accumulate across runs on a

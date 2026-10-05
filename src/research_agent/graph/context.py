@@ -13,7 +13,7 @@ from langgraph.config import get_config
 from langgraph.runtime import Runtime
 
 from research_agent.config import Settings
-from research_agent.llm.base import LLM, Usage
+from research_agent.llm.base import LLMProvider, Usage
 from research_agent.llm.pricing import estimate_cost_usd
 from research_agent.logging import get_logger
 from research_agent.tools.budget import BudgetedSearch, RunBudget
@@ -85,7 +85,7 @@ class RunScope:
 @dataclass
 class GraphDeps:
     settings: Settings
-    llm: LLM
+    llm: LLMProvider
     search_provider: SearchProvider
     fetcher: PageFetcher
     _fallback_scopes: dict[str, RunScope] = field(default_factory=dict)

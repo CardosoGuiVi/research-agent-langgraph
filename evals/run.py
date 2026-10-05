@@ -20,7 +20,7 @@ from typing import Any
 import yaml
 
 from evals.checks import JudgeScore, run_checks
-from research_agent.config import get_settings
+from research_agent.config import LLMProviderName, Settings, get_settings
 from research_agent.container import Container, build_container
 from research_agent.llm.base import Tier
 from research_agent.logging import configure_logging
@@ -72,6 +72,17 @@ async def evaluate(container: Container, item: dict[str, Any], stamp: str) -> di
             "error": f"{type(exc).__name__}: {exc}"[:300],
             "latency_s": round(time.perf_counter() - start, 1),
         }
+
+
+def describe_models(settings: Settings) -> str:
+    """The models actually in use, for the active LLM_PROVIDER."""
+    if settings.llm_provider is LLMProviderName.OPENROUTER:
+        smart = settings.openrouter_model_smart or settings.openrouter_model
+        return f"provider=openrouter, fast={settings.openrouter_model}, smart={smart}"
+    return (
+        f"provider=anthropic, fast={settings.llm_model_fast}, smart={settings.llm_model_smart} "
+        f"(effort {settings.llm_smart_effort})"
+    )
 
 
 def summary_table(rows: list[dict[str, Any]], model_info: str) -> str:
@@ -145,8 +156,7 @@ async def main() -> None:
         await container.aclose()
 
     model_info = (
-        f"fast={settings.llm_model_fast}, smart={settings.llm_model_smart} "
-        f"(effort {settings.llm_smart_effort}), search={settings.search_provider.value}, "
+        f"{describe_models(settings)}, search={settings.search_provider.value}, "
         f"max_iterations={settings.max_iterations}, prompts="
         + ", ".join(
             f"{n}@v{load_prompt(n).version}"

@@ -87,7 +87,7 @@ flowchart TD
 
     R --> SP["SearchProvider<br/>Tavily | DuckDuckGo (ddgs)"]
     R --> F["PageFetcher<br/>httpx + trafilatura, SSRF guard"]
-    P & R & AN & A --> LLM["LLM port -> Anthropic adapter<br/>(langchain-anthropic)"]
+    P & R & AN & A --> LLM["LLMProvider port<br/>Anthropic (default) | OpenRouter"]
 ```
 
 The diagram exported from the compiled graph (`make graph` writes [`docs/graph.mmd`](docs/graph.mmd)):
@@ -129,7 +129,8 @@ graph TD;
 | Piece | Why |
 |---|---|
 | **LangGraph** 1.2 | Explicit graph, `Send` fan-out, reducers, checkpointer memory, custom streaming, Studio. See [ADR 1](docs/adr/0001-use-langgraph.md). |
-| **Claude** via `langchain-anthropic` | Structured outputs (`output_config.format`), tool use, streaming, effort control. Confined to one adapter behind an `LLM` Protocol. |
+| **Claude** via `langchain-anthropic` | Structured outputs (`output_config.format`), tool use, streaming, effort control. Confined to one adapter behind the `LLMProvider` Protocol. |
+| **OpenRouter** via `langchain-openai` (optional) | Alternative `LLMProvider` (OpenAI-compatible API, many vendors' models). Prepared, not yet exercised live. See [ADR 7](docs/adr/0007-llm-provider-openrouter.md). |
 | **FastAPI** | Async, Pydantic v2 validation, native SSE (`EventSourceResponse`), no extra dependency. |
 | **Tavily / ddgs** | LLM-oriented search with a key, or keyless fallback. See [ADR 3](docs/adr/0003-search-provider.md). |
 | **httpx + trafilatura** | Streaming download with byte limits; robust main-content extraction. |
@@ -182,11 +183,16 @@ All settings come from environment variables (`.env` locally). Secrets are `Secr
 
 | Variable | Default | Description |
 |---|---|---|
-| `ANTHROPIC_API_KEY` | (required) | Anthropic API key. |
+| `LLM_PROVIDER` | `anthropic` | `anthropic` or `openrouter`; selects the `LLMProvider` adapter. |
+| `ANTHROPIC_API_KEY` | (required for `anthropic`) | Anthropic API key. |
 | `TAVILY_API_KEY` | empty | If set, Tavily is the search provider; otherwise DuckDuckGo (ddgs). |
 | `LLM_MODEL_FAST` | `claude-haiku-4-5` | Planner, research tool loop, analysis, eval judge. |
 | `LLM_MODEL_SMART` | `claude-opus-5` | Final synthesis. |
 | `LLM_SMART_EFFORT` | `medium` | `output_config.effort` for the smart model (`low`..`max`). |
+| `OPENROUTER_API_KEY` | empty | Required only when `LLM_PROVIDER=openrouter`. Not included in the repo. |
+| `OPENROUTER_MODEL` | empty | Required with `openrouter`; OpenRouter model id (`vendor/model`), used for all calls. |
+| `OPENROUTER_MODEL_SMART` | `OPENROUTER_MODEL` | Optional model for the final synthesis. |
+| `OPENROUTER_BASE_URL` | `https://openrouter.ai/api/v1` | OpenRouter's OpenAI-compatible endpoint. |
 | `LLM_TIMEOUT_S` | `120` | Per-request timeout for LLM calls. |
 | `LLM_MAX_RETRIES` | `2` | SDK retries (408/409/429/5xx/connection errors, with backoff). |
 | `MAX_TOKENS_PLANNER` / `_RESEARCH` / `_ANALYSIS` / `_ANSWER` | `2000` / `2000` / `2000` / `16000` | `max_tokens` per call type. |
@@ -201,6 +207,19 @@ All settings come from environment variables (`.env` locally). Secrets are `Secr
 | `TOOL_MAX_ATTEMPTS` | `3` | Attempts for transient tool errors (timeouts, 429, 5xx). |
 | `FETCH_MAX_BYTES` / `FETCH_MAX_CHARS` | `2000000` / `6000` | Download limit and extracted-text limit per page. |
 | `LOG_LEVEL` / `LOG_JSON` | `INFO` / `true` | Logging. |
+
+### LLM provider (Anthropic or OpenRouter)
+
+Graph nodes depend only on the `LLMProvider` Protocol (`llm/base.py`: `structured`, `tool_step`, `stream_text`). `container.make_llm` picks the adapter from `LLM_PROVIDER`: `AnthropicLLM` (default, unchanged) or `OpenRouterProvider` (`ChatOpenAI` pointed at OpenRouter). To use OpenRouter later, put these in your local `.env` (never committed; no key ships with this repo):
+
+```bash
+LLM_PROVIDER=openrouter
+OPENROUTER_API_KEY=...          # from openrouter.ai
+OPENROUTER_MODEL=vendor/model   # any OpenRouter model with tool calling
+# OPENROUTER_MODEL_SMART=vendor/bigger-model   # optional, for the final report
+```
+
+The chosen model must support tool calling (research loop) and structured outputs (`response_format` JSON schema; planner, analysis, judge). `LLM_MODEL_*`, `LLM_SMART_EFFORT` and Anthropic's refusal fallback do not apply to OpenRouter. Estimated cost is reported as `null` for models missing from `llm/pricing.py` (token budgets still apply).
 
 ## Testing and evaluation
 
@@ -249,7 +268,7 @@ src/research_agent/
     state.py      typed state + reducers
     context.py    GraphDeps (adapters) and RunScope (budget, cache, metrics)
     export.py     Mermaid export
-  llm/            LLM Protocol, Anthropic adapter, pricing
+  llm/            LLMProvider Protocol, Anthropic and OpenRouter adapters, pricing
   tools/          SearchProvider (Tavily, ddgs), budget/cache, fetcher, retries, errors
   prompts/        versioned prompt files (*.md with front matter)
   static/         single-page UI
@@ -271,6 +290,7 @@ docs/adr/         architecture decision records
 - [ADR 4: Stream markdown, parse into the report schema](docs/adr/0004-streamed-markdown-report.md)
 - [ADR 5: In-memory checkpointer (for now)](docs/adr/0005-in-memory-checkpointer.md)
 - [ADR 6: Two model tiers and hard cost controls](docs/adr/0006-models-and-cost-controls.md)
+- [ADR 7: LLMProvider port with an OpenRouter adapter](docs/adr/0007-llm-provider-openrouter.md)
 
 ## Limitations and next steps
 

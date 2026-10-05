@@ -1,6 +1,8 @@
 from evals.checks import run_checks
+from evals.run import describe_models
 from research_agent.domain import Source
 from research_agent.report import build_report
+from tests.fakes import make_settings
 
 SOURCES = [
     Source(id=1, url="https://www.a.example/x", title="A", fetched=True),
@@ -39,3 +41,17 @@ def test_invalid_citation_and_too_few_sources() -> None:
 def test_schema_invalid() -> None:
     result = run_checks({"question": "q"}, SOURCES, min_sources=1)
     assert not result.schema_valid
+
+
+def test_describe_models_follows_the_llm_provider() -> None:
+    anthropic = describe_models(make_settings(llm_provider="anthropic"))
+    assert anthropic.startswith("provider=anthropic, fast=claude-")
+    openrouter = describe_models(
+        make_settings(
+            llm_provider="openrouter",
+            openrouter_model="vendor/fast",
+            openrouter_model_smart="vendor/smart",
+        )
+    )
+    assert openrouter == "provider=openrouter, fast=vendor/fast, smart=vendor/smart"
+    assert "claude" not in openrouter

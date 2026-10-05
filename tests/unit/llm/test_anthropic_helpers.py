@@ -1,13 +1,8 @@
 import pytest
 from langchain_core.messages import AIMessage, AIMessageChunk
 
-from research_agent.llm.anthropic import (
-    extract_text,
-    extract_usage,
-    raise_on_refusal,
-    supports_server_side_fallback,
-)
-from research_agent.llm.base import LLMRefusalError
+from research_agent.llm.anthropic import raise_on_refusal, supports_server_side_fallback
+from research_agent.llm.base import LLMRefusalError, extract_text, extract_usage
 
 
 def test_extract_text_skips_thinking_and_tool_blocks() -> None:
