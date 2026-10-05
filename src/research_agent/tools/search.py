@@ -81,6 +81,7 @@ class TavilySearch:
             attempts=self._attempts,
             timeout_s=self._timeout_s,
             base_delay_s=self._base_delay_s,
+            timeout_error=TransientSearchError,
         )
 
 
@@ -127,4 +128,5 @@ class DuckDuckGoSearch:
             attempts=self._attempts,
             timeout_s=self._timeout_s,
             base_delay_s=self._base_delay_s,
+            timeout_error=TransientSearchError,
         )
