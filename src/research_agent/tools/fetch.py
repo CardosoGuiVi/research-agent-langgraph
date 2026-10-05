@@ -75,6 +75,7 @@ class HttpPageFetcher:
             attempts=self._attempts,
             timeout_s=self._timeout_s,
             base_delay_s=self._base_delay_s,
+            timeout_error=TransientFetchError,
         )
 
     async def _fetch_once(self, url: str) -> FetchedPage:

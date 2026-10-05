@@ -2,6 +2,7 @@ import asyncio
 
 import pytest
 
+from research_agent.tools.errors import TransientSearchError
 from research_agent.tools.retry import TransientError, call_with_retries
 
 
@@ -53,3 +54,29 @@ async def test_timeouts_are_retried_as_transient() -> None:
     assert (
         await call_with_retries(slow_then_fast, attempts=2, timeout_s=0.01, base_delay_s=0) == "ok"
     )
+
+
+async def test_exhausted_timeouts_become_a_tool_error() -> None:
+    """A raw TimeoutError is not a ToolError, so it used to abort the whole research branch."""
+
+    async def always_slow() -> str:
+        await asyncio.sleep(1)
+        return "never"
+
+    with pytest.raises(TransientError, match="timed out"):
+        await call_with_retries(always_slow, attempts=2, timeout_s=0.01, base_delay_s=0)
+
+
+async def test_timeout_error_type_is_chosen_by_the_caller() -> None:
+    async def always_slow() -> str:
+        await asyncio.sleep(1)
+        return "never"
+
+    with pytest.raises(TransientSearchError):
+        await call_with_retries(
+            always_slow,
+            attempts=1,
+            timeout_s=0.01,
+            base_delay_s=0,
+            timeout_error=TransientSearchError,
+        )

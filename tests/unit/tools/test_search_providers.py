@@ -1,3 +1,4 @@
+import time
 from typing import Any
 
 import pytest
@@ -106,3 +107,15 @@ async def test_ddg_other_errors_are_search_errors() -> None:
     stub = StubDDGS(exc=DDGSException("boom"))
     with pytest.raises(SearchError):
         await DuckDuckGoSearch(stub, timeout_s=1, attempts=1).search("q", max_results=3)
+
+
+class SlowDDGS:
+    def text(self, query: str, **kwargs: Any) -> list[dict[str, Any]]:
+        time.sleep(0.2)
+        return []
+
+
+async def test_ddg_hanging_search_is_a_search_error() -> None:
+    """Seen in a live eval: ddgs hung under rate limiting and a raw TimeoutError killed a branch."""
+    with pytest.raises(TransientSearchError, match="timed out"):
+        await DuckDuckGoSearch(SlowDDGS(), timeout_s=0.01, attempts=1).search("q", max_results=3)
